@@ -25,10 +25,10 @@ int create_socket() {
     return my_socket;
 }
 
-sockaddr_in get_server() {
+sockaddr_in get_server(char *hostname) {
 
     struct hostent *s;
-    s = gethostbyname(argv[1]);
+    s = gethostbyname(hostname);
 
     struct sockaddr_in server;
     memset((char *) &server, 0, sizeof(server));
@@ -39,11 +39,11 @@ sockaddr_in get_server() {
     return server;
 }
 
-int send_to_server(char *payload) {
+int send_to_server(char *payload, char *hostname) {
 
-    my_socket = create_socket();
+    int my_socket = create_socket();
 
-    struct sockaddr_in server = get_server();
+    struct sockaddr_in server = get_server(hostname);
 
     socklen_t slen = sizeof(server);
     sendto(my_socket, payload, sizeof(payload), 0, (struct sockaddr *)&server, slen);
@@ -55,8 +55,8 @@ int send_to_server(char *payload) {
 
 int main(int argc, char *argv[]) {
 
-    char payload[512] = "TESTPAYLOAD";
-    send_to_server(payload);
+    char payload[4] = "TE";
+    send_to_server(payload, argv[1]);
     
     return 0;
 }

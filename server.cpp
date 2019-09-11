@@ -19,16 +19,15 @@ using namespace std;
 
 
 int create_socket() {
-
     int my_socket = 0;
+
     my_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    
     return my_socket;
 }
 
 sockaddr_in create_server(int my_socket) {
-
     struct sockaddr_in server;
+
     memset((char *) &server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(7755);
@@ -40,14 +39,14 @@ sockaddr_in create_server(int my_socket) {
 
 }
 
-
 int get_from_client(char *payload) {
-
-    int my_socket = create_socket();
-
-    struct sockaddr_in server = create_server(my_socket);
-
+    int my_socket;
+    struct sockaddr_in server;
     struct sockaddr_in client;
+
+    my_socket = create_socket();
+    server = create_server(my_socket);
+
     socklen_t clen = sizeof(client);
     recvfrom(my_socket, payload, sizeof(payload), 0, (struct sockaddr *)&client, &clen);
 
@@ -56,12 +55,24 @@ int get_from_client(char *payload) {
     return 0;
 }
 
+int handshake(char *message) {
+
+    get_from_client(message);
+
+    return 0;
+}
+
 int main() {
+    const char* handshake_correct = "117";
+    char *handshake_actual;
 
-    char payload[4];
-    get_from_client(payload);
+    handshake(handshake_actual);
 
-    cout << payload;
+    if (*handshake_actual == *handshake_correct) {
+        cout << "nice";
+    } else {
+        cout << "not nice";
+    }
 
     return 0;
 }

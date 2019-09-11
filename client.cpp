@@ -18,19 +18,18 @@
 using namespace std;
 
 int create_socket() {
-
     int my_socket = 0;
+
     my_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    
     return my_socket;
 }
 
-sockaddr_in get_server(char *hostname) {
-
+sockaddr_in get_server(const char *hostname) {
     struct hostent *s;
+    struct sockaddr_in server;
+
     s = gethostbyname(hostname);
 
-    struct sockaddr_in server;
     memset((char *) &server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(7755);
@@ -39,11 +38,12 @@ sockaddr_in get_server(char *hostname) {
     return server;
 }
 
-int send_to_server(char *payload, char *hostname) {
+int send_to_server(const char *payload, const char *hostname) {
+    int my_socket;
+    struct sockaddr_in server;
 
-    int my_socket = create_socket();
-
-    struct sockaddr_in server = get_server(hostname);
+    my_socket = create_socket();
+    server = get_server(hostname);
 
     socklen_t slen = sizeof(server);
     sendto(my_socket, payload, sizeof(payload), 0, (struct sockaddr *)&server, slen);
@@ -53,10 +53,51 @@ int send_to_server(char *payload, char *hostname) {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
+sockaddr_in create_response_server(int my_socket) {
+    struct sockaddr_in server;
 
-    char payload[4] = "TE";
-    send_to_server(payload, argv[1]);
+    memset((char *) &server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(7755);
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    bind(my_socket, (struct sockaddr *) &server, sizeof(server));
+
+    return server;
+
+}
+
+int get_from_server(char *response) {
+
+    int my_socket;
+    struct sockaddr_in server;
+    struct sockaddr_in client;
+    
+    my_socket = create_socket();
+    server = create_response_server(my_socket);
+
+    socklen_t clen = sizeof(client);
+    recvfrom(my_socket, response, sizeof(response), 0, (struct sockaddr *)&client, &clen);
+
+    close(my_socket);
+
+    return 0;
+}
+
+int handshake(const char *message, const char *hostname) {
+    char *response;
+
+    send_to_server(message, hostname);
+    //get_from_server(response);
+
+    return 0;
+}
+
+int main(int argc, char *argv[]) {
+    const char *hostname = argv[1];
+    const char *handshake_message = "117";
+
+    handshake(handshake_message, hostname);
     
     return 0;
 }

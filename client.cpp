@@ -5,6 +5,7 @@
 //  1). ./server.cpp
 //  2). Lecture-3-F2019.pdf     Lecture 3 Slides
 //  3). Various manpages
+//  4). https://www.cprogramming.com/tutorial/lesson14.html commandline argument parsing
 
 #include <iostream>
 #include <sys/types.h>
@@ -14,6 +15,7 @@
 #include <string.h>
 #include <string>
 #include <netdb.h>
+#include <sstream>
 
 using namespace std;
 
@@ -24,7 +26,7 @@ int create_socket() {
     return my_socket;
 }
 
-sockaddr_in get_server(const char *hostname, const int port) {
+sockaddr_in get_server(const char *hostname, int port) {
     struct hostent *s;
     struct sockaddr_in server;
 
@@ -38,7 +40,7 @@ sockaddr_in get_server(const char *hostname, const int port) {
     return server;
 }
 
-int send_to_server(const char *payload, const char *hostname, const int port) {
+int send_to_server(const char *payload, const char *hostname, int port) {
     int my_socket;
     struct sockaddr_in server;
 
@@ -53,7 +55,7 @@ int send_to_server(const char *payload, const char *hostname, const int port) {
     return 0;
 }
 
-sockaddr_in create_response_server(int my_socket, const int port) {
+sockaddr_in create_response_server(int my_socket, int port) {
     struct sockaddr_in server;
 
     memset((char *) &server, 0, sizeof(server));
@@ -67,36 +69,36 @@ sockaddr_in create_response_server(int my_socket, const int port) {
 
 }
 
-int get_from_server(char *response, const int port) {
-
+char* get_from_server(int port) {
     int my_socket;
     struct sockaddr_in server;
     struct sockaddr_in client;
+    char* response;
     
     my_socket = create_socket();
     server = create_response_server(my_socket, port);
-
     socklen_t clen = sizeof(client);
     recvfrom(my_socket, response, sizeof(response), 0, (struct sockaddr *)&client, &clen);
-
     close(my_socket);
 
-    return 0;
+    return response;
 }
 
-int handshake(const char *message, const char *hostname, const int port) {
-    //char *response;
+int handshake(const char *handshake_message, const char *hostname, int port) {
+    //char *response = NULL;
 
-    send_to_server(message, hostname, port);
-    //get_from_server(response);
+    send_to_server(handshake_message, hostname, port);
+    //response = get_from_server(port);
 
     return 0;
 }
 
 int main(int, char *argv[]) {
+    int port;
     const char *hostname = argv[1];
-    const int port = stoi(argv[2]);
     const char *handshake_message = "117";
+
+    istringstream(argv[2]) >> port;
 
     handshake(handshake_message, hostname, port);
     

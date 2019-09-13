@@ -85,7 +85,7 @@ int get_from_server(char *response) {
 }
 
 int handshake(const char *message, const char *hostname) {
-    char *response;
+    //char *response;
 
     send_to_server(message, hostname);
     //get_from_server(response);
@@ -93,7 +93,7 @@ int handshake(const char *message, const char *hostname) {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
+int main(int, char *argv[]) {
     const char *hostname = argv[1];
     const char *handshake_message = "117";
 

@@ -25,7 +25,7 @@ int create_socket() {
     int my_socket = 0;
 
     my_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    
+
     return my_socket;
 }
 
@@ -46,12 +46,12 @@ char* get_from_client(int port) {
     int my_socket;
     struct sockaddr_in server;
     struct sockaddr_in client;
-    char* payload = NULL;
+    char* buffer = NULL;
 
     my_socket = create_socket();
     server = create_server(my_socket, port);
     socklen_t clen = sizeof(client);
-    recvfrom(my_socket, buffer, sizeof(payload), 0, (struct sockaddr *)&client, &clen);
+    recvfrom(my_socket, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
     close(my_socket);
 
     return buffer;

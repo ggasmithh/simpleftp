@@ -25,12 +25,12 @@ int create_socket() {
     return my_socket;
 }
 
-sockaddr_in create_server(int my_socket) {
+sockaddr_in create_server(int my_socket, const int port) {
     struct sockaddr_in server;
 
     memset((char *) &server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_port = htons(7755);
+    server.sin_port = htons(port);
     server.sin_addr.s_addr = htonl(INADDR_ANY);
 
     bind(my_socket, (struct sockaddr *) &server, sizeof(server));
@@ -39,13 +39,13 @@ sockaddr_in create_server(int my_socket) {
 
 }
 
-int get_from_client(char *payload) {
+int get_from_client(char *payload, const int port) {
     int my_socket;
     struct sockaddr_in server;
     struct sockaddr_in client;
 
     my_socket = create_socket();
-    server = create_server(my_socket);
+    server = create_server(my_socket, port);
 
     socklen_t clen = sizeof(client);
     recvfrom(my_socket, payload, sizeof(payload), 0, (struct sockaddr *)&client, &clen);
@@ -55,18 +55,19 @@ int get_from_client(char *payload) {
     return 0;
 }
 
-int handshake(char *message) {
+int handshake(char *message, const int port) {
 
-    get_from_client(message);
+    get_from_client(message, port);
 
     return 0;
 }
 
-int main() {
+int main(int, char* argv[]) {
+    const int port = stoi(argv[1]);
     const char* handshake_correct = "117";
-    char *handshake_actual;
+    char *handshake_actual = NULL;
 
-    handshake(handshake_actual);
+    handshake(handshake_actual, port);
 
     if (*handshake_actual == *handshake_correct) {
         cout << "nice";

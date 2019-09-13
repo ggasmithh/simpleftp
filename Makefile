@@ -1,10 +1,10 @@
 all: client server
 
 client: client.o
-	g++ -Wall -Wextra -Werror client.cpp -lstdc++ -o client
+	g++ -g -Wall -Wextra -Werror client.cpp -lstdc++ -o client
 	
 server: server.o
-	g++ -Wall -Wextra -Werror server.cpp -lstdc++ -o server
+	g++ -g -Wall -Wextra -Werror server.cpp -lstdc++ -o server
 	
 clean:
 	\rm *.o client server

@@ -19,6 +19,8 @@
 #include <string>
 #include <sstream>
 #include <stdlib.h>
+#include <stdexcept>
+#include <time.h>
 
 using namespace std;
 
@@ -61,31 +63,34 @@ char* get_from_client(int port) {
 }
 
 int get_transaction_port() {
+    srand(time(NULL));
     return 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
 }
 
-int handshake(int port) {
+int handshake(int handshake_port) {
 
     const char* handshake_correct = "117";
     char *handshake_actual;
 
-    handshake_actual = get_from_client(port);
+    handshake_actual = get_from_client(handshake_port);
 
     if (*handshake_actual == *handshake_correct) {
-        cout << endl << "nice" << endl;
+        return get_transaction_port();
     } else {
-        cout << endl << "not nice" << endl;
+        throw runtime_error("Handshake failed.");
     }
 
-    return 0;
 }
 
 int main(int, char* argv[]) {
-    int port;
+    int handshake_port;
+    int transaction_port;
  
-    istringstream(argv[1]) >> port;
+    istringstream(argv[1]) >> handshake_port;
 
-    handshake(port);
+    transaction_port = handshake(handshake_port);
+
+    cout << transaction_port << endl;
 
     return 0;
 }

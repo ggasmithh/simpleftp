@@ -8,6 +8,7 @@
 //  4). Various manpages
 //  5). https://www.cprogramming.com/tutorial/lesson14.html commandline argument parsing
 //  6). https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception Argument handling
+//  7). https://stackoverflow.com/questions/5008804/generating-random-integer-from-a-range
 
 #include <iostream>
 #include <sys/types.h>
@@ -17,6 +18,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -56,6 +58,10 @@ char* get_from_client(int port) {
     close(my_socket);
 
     return buffer;
+}
+
+int get_transaction_port() {
+    return 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
 }
 
 int handshake(int port) {

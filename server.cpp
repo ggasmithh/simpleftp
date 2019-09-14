@@ -58,24 +58,28 @@ char* get_from_client(int port) {
     return buffer;
 }
 
-char* handshake(int port) {
-    return get_from_client(port);
-}
+int handshake(int port) {
 
-int main(int, char* argv[]) {
-    int port;
     const char* handshake_correct = "117";
     char *handshake_actual;
 
-    istringstream(argv[1]) >> port;
-
-    handshake_actual = handshake(port);
+    handshake_actual = get_from_client(port);
 
     if (*handshake_actual == *handshake_correct) {
         cout << endl << "nice" << endl;
     } else {
         cout << endl << "not nice" << endl;
     }
+
+    return 0;
+}
+
+int main(int, char* argv[]) {
+    int port;
+ 
+    istringstream(argv[1]) >> port;
+
+    handshake(port);
 
     return 0;
 }

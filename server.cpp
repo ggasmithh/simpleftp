@@ -47,10 +47,9 @@ sockaddr_in create_server(int my_socket, int port) {
 
 }
 
-char* get_from_client(int port) {
+char* get_from_client(int port, struct sockaddr_in &client) {
     int my_socket;
     struct sockaddr_in server;
-    struct sockaddr_in client;
     char buffer[MAXBUFFERLENGTH];
 
     my_socket = create_socket();
@@ -62,20 +61,28 @@ char* get_from_client(int port) {
     return buffer;
 }
 
+int send_to_client(const char *payload, struct sockaddr_in &client, int port) {
+
+    return 0;
+}
+
 int get_transaction_port() {
     srand(time(NULL));
     return 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
 }
 
-int handshake(int handshake_port) {
-
+int handshake(int handshake_port, struct sockaddr_in &client) {
     const char* handshake_correct = "117";
     char *handshake_actual;
+    int transaction_port;
 
-    handshake_actual = get_from_client(handshake_port);
+    handshake_actual = get_from_client(handshake_port, client);
 
     if (*handshake_actual == *handshake_correct) {
-        return get_transaction_port();
+        transaction_port = get_transaction_port();
+        send_to_client("test", client, transaction_port);
+        return transaction_port;
+
     } else {
         throw runtime_error("Handshake failed.");
     }
@@ -85,10 +92,11 @@ int handshake(int handshake_port) {
 int main(int, char* argv[]) {
     int handshake_port;
     int transaction_port;
+    struct sockaddr_in client;
  
     istringstream(argv[1]) >> handshake_port;
 
-    transaction_port = handshake(handshake_port);
+    transaction_port = handshake(handshake_port, client);
 
     cout << transaction_port << endl;
 

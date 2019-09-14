@@ -20,6 +20,7 @@
 
 using namespace std;
 
+int MAXBUFFERLENGTH = 4;
 
 int create_socket() {
     int my_socket = 0;
@@ -46,7 +47,7 @@ char* get_from_client(int port) {
     int my_socket;
     struct sockaddr_in server;
     struct sockaddr_in client;
-    char* buffer = NULL;
+    char buffer[MAXBUFFERLENGTH];
 
     my_socket = create_socket();
     server = create_server(my_socket, port);
@@ -64,16 +65,16 @@ char* handshake(int port) {
 int main(int, char* argv[]) {
     int port;
     const char* handshake_correct = "117";
-    char *handshake_actual = NULL;
+    char *handshake_actual;
 
     istringstream(argv[1]) >> port;
 
     handshake_actual = handshake(port);
 
     if (*handshake_actual == *handshake_correct) {
-        cout << "nice";
+        cout << endl << "nice" << endl;
     } else {
-        cout << "not nice";
+        cout << endl << "not nice" << endl;
     }
 
     return 0;

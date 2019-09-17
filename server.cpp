@@ -9,6 +9,7 @@
 //  5). https://www.cprogramming.com/tutorial/lesson14.html commandline argument parsing
 //  6). https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception Argument handling
 //  7). https://stackoverflow.com/questions/5008804/generating-random-integer-from-a-range
+//  8). https://stackoverflow.com/questions/14753423/sprintf-convert-int-to-char
 
 #include <iostream>
 #include <sys/types.h>
@@ -21,84 +22,63 @@
 #include <stdlib.h>
 #include <stdexcept>
 #include <time.h>
+#include <stdio.h>
 
 using namespace std;
 
-int MAXBUFFERLENGTH = 4;
-
-int create_socket() {
-    int my_socket = 0;
-
-    my_socket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    return my_socket;
-}
-
-sockaddr_in create_server(int my_socket, int port) {
-    struct sockaddr_in server;
-
-    memset((char *) &server, 0, sizeof(server));
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(my_socket, (struct sockaddr *) &server, sizeof(server));
-
-    return server;
-
-}
-
-char* get_from_client(int port, struct sockaddr_in &client) {
-    int my_socket;
-    struct sockaddr_in server;
-    char buffer[MAXBUFFERLENGTH];
-
-    my_socket = create_socket();
-    server = create_server(my_socket, port);
-    socklen_t clen = sizeof(client);
-    recvfrom(my_socket, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
-    close(my_socket);
-
-    return buffer;
-}
-
-int send_to_client(const char *payload, struct sockaddr_in &client, int port) {
-
-    return 0;
-}
-
-int get_transaction_port() {
-    srand(time(NULL));
-    return 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
-}
-
-int handshake(int handshake_port, struct sockaddr_in &client) {
-    const char* handshake_correct = "117";
-    char *handshake_actual;
-    int transaction_port;
-
-    handshake_actual = get_from_client(handshake_port, client);
-
-    if (*handshake_actual == *handshake_correct) {
-        transaction_port = get_transaction_port();
-        send_to_client("test", client, transaction_port);
-        return transaction_port;
-
-    } else {
-        throw runtime_error("Handshake failed.");
-    }
-
-}
-
 int main(int, char* argv[]) {
-    int handshake_port;
+    const char *handshake_correct = "117";
+
+    char *handshake_actual;
+    int handshake_port = 1555;
     int transaction_port;
+    int sockfd;
+    struct sockaddr_in server;
     struct sockaddr_in client;
+    char buffer[100];
  
-    istringstream(argv[1]) >> handshake_port;
+    //istringstream(argv[1]) >> handshake_port;
 
-    transaction_port = handshake(handshake_port, client);
+    // THIS IS UDP, CORRECT THIS LATER
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    cout << transaction_port << endl;
+    // Clear out our buffer
+    memset((char *)&buffer, 0, sizeof(buffer));
+
+    // Set up the server object
+    memset((char *)&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(handshake_port);
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    bind(sockfd, (struct sockaddr *)&server, sizeof(server));
+
+    socklen_t clen = sizeof(client);
+    
+    recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
+
+    // // buffer will be the handshake message from the client at this point
+    // if (buffer == handshake_correct) {
+    //     srand(time(NULL));
+    //     transaction_port = 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
+    //     sprintf(payload, "%d", transaction_port);
+
+    //     // DEBUG MESSAGE
+    //     cout << "Server Says: Transaction port: " << transaction_port << endl;
+
+    //     // Send the transaction port message back to the client
+    //     socklen_t clen = sizeof(client);
+
+    //     // DEBUG MESSAGE
+    //     cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
+    //     sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
+    // } else {
+    //     throw runtime_error("Handshake failed.");
+    // }
+
+    close(sockfd);
+
+    // DEBUG MESSAGE
+    cout << buffer << endl;
 
     return 0;
 }

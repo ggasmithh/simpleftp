@@ -16,91 +16,60 @@
 #include <string>
 #include <netdb.h>
 #include <sstream>
+#include <stdexcept>
 
 using namespace std;
 
-int MAXBUFFERLENGTH = 4;
+int main(int, char *argv[]) {
+    char handshake_message[100] = "117";
+    const char *hostname = argv[1];
 
-int create_socket() {
-    int my_socket = 0;
+    cout << handshake_message << endl;
 
-    my_socket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    return my_socket;
-}
-
-sockaddr_in get_server(const char *hostname, int port) {
     struct hostent *s;
     struct sockaddr_in server;
+    struct sockaddr_in response_server;
+    int handshake_port = 1555;
+    char *buffer;
+    char *payload;
+    int sockfd;
+        
+    //istringstream(argv[2]) >> handshake_port;
 
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    // Get the server's details
     s = gethostbyname(hostname);
     memset((char *) &server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_port = htons(port);
+    server.sin_port = htons(handshake_port);
     bcopy((char *)s->h_addr, (char *)&server.sin_addr.s_addr, s->h_length);
 
-    return server;
-}
-
-int send_to_server(const char *payload, const char *hostname, int port) {
-    int my_socket;
-    struct sockaddr_in server;
-
-    my_socket = create_socket();
-    server = get_server(hostname, port);
+    // Send the handshake message
     socklen_t slen = sizeof(server);
-    sendto(my_socket, payload, sizeof(payload), 0, (struct sockaddr *)&server, slen);
-    close(my_socket);
+    sendto(sockfd, handshake_message, sizeof(handshake_message), 0, (struct sockaddr *)&server, slen);
 
-    return 0;
-}
+    // Create a "response "server"???"  (find a better name for this)
+    // memset((char *) &response_server, 0, sizeof(response_server));
+    // response_server.sin_family = AF_INET;
+    // response_server.sin_port = htons(handshake_port);
+    // response_server.sin_addr.s_addr = htonl(INADDR_ANY);
+    // bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
 
-sockaddr_in create_response_server(int my_socket, int port) {
-    struct sockaddr_in server;
+    // // Prepare for response
+    // memset((char *) &buffer, 0, sizeof(buffer));
+    // socklen_t rslen = sizeof(response_server);
 
-    memset((char *) &server, 0, sizeof(server));
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-    server.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(my_socket, (struct sockaddr *) &server, sizeof(server));
+    // // DEBUG MESSAGE
+    // cout << "Waiting for payload on socket " << sockfd << endl;
 
-    return server;
+    // recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&response_server, &rslen);
 
-}
+    // // DEBUG MESSAGE
+    // cout << "Client Says: Transaction port: " << buffer << endl;
 
-char* get_from_server(int port) {
-    int my_socket;
-    struct sockaddr_in server;
-    struct sockaddr_in client;
-    char buffer[MAXBUFFERLENGTH];
-    
-    my_socket = create_socket();
-    server = create_response_server(my_socket, port);
-    socklen_t clen = sizeof(client);
-    recvfrom(my_socket, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
-    close(my_socket);
-
-    return buffer;
-}
-
-int handshake(const char *handshake_message, const char *hostname, int port) {
-    //char *response = NULL;
-
-    send_to_server(handshake_message, hostname, port);
-    //response = get_from_server(port);
-
-    return 0;
-}
-
-int main(int, char *argv[]) {
-    int port;
-    const char *hostname = argv[1];
-    const char *handshake_message = "117";;
-
-    
-
-    istringstream(argv[2]) >> port;
-    handshake(handshake_message, hostname, port);
+    close(sockfd);
     
     return 0;
 }

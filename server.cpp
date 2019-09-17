@@ -24,20 +24,24 @@
 #include <time.h>
 #include <stdio.h>
 
+#define MAX_BUFFER_SIZE 8
+
 using namespace std;
 
+
 int main(int, char* argv[]) {
-    const char *handshake_correct = "117";
+    const char handshake_correct[MAX_BUFFER_SIZE] = "117";
 
     char *handshake_actual;
-    int handshake_port = 1555;
+    int handshake_port;
     int transaction_port;
     int sockfd;
     struct sockaddr_in server;
     struct sockaddr_in client;
-    char buffer[100];
+    char buffer[MAX_BUFFER_SIZE];
+    char payload[MAX_BUFFER_SIZE];
  
-    //istringstream(argv[1]) >> handshake_port;
+    istringstream(argv[1]) >> handshake_port;
 
     // THIS IS UDP, CORRECT THIS LATER
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -56,29 +60,25 @@ int main(int, char* argv[]) {
     
     recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
 
-    // // buffer will be the handshake message from the client at this point
-    // if (buffer == handshake_correct) {
-    //     srand(time(NULL));
-    //     transaction_port = 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
-    //     sprintf(payload, "%d", transaction_port);
+    // buffer will be the handshake message from the client at this point
+    if (strcmp(buffer, handshake_correct) == 0) {
+        srand(time(NULL));
+        transaction_port = 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
+        sprintf(payload, "%d", transaction_port);
 
-    //     // DEBUG MESSAGE
-    //     cout << "Server Says: Transaction port: " << transaction_port << endl;
+        // DEBUG MESSAGE
+        cout << "Server Says: Transaction port: " << transaction_port << endl;
+        // Send the transaction port message back to the client
+        socklen_t clen = sizeof(client);
 
-    //     // Send the transaction port message back to the client
-    //     socklen_t clen = sizeof(client);
-
-    //     // DEBUG MESSAGE
-    //     cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
-    //     sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
-    // } else {
-    //     throw runtime_error("Handshake failed.");
-    // }
+        // DEBUG MESSAGE
+        cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
+        sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
+    } else {
+        throw runtime_error("Handshake failed.");
+    }
 
     close(sockfd);
-
-    // DEBUG MESSAGE
-    cout << buffer << endl;
 
     return 0;
 }

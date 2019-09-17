@@ -18,10 +18,12 @@
 #include <sstream>
 #include <stdexcept>
 
+#define MAX_BUFFER_SIZE 8
+
 using namespace std;
 
 int main(int, char *argv[]) {
-    char handshake_message[100] = "117";
+    char handshake_message[MAX_BUFFER_SIZE] = "117";
     const char *hostname = argv[1];
 
     cout << handshake_message << endl;
@@ -29,12 +31,12 @@ int main(int, char *argv[]) {
     struct hostent *s;
     struct sockaddr_in server;
     struct sockaddr_in response_server;
-    int handshake_port = 1555;
-    char *buffer;
-    char *payload;
+    int handshake_port;
+    char buffer[MAX_BUFFER_SIZE];
+    char payload[MAX_BUFFER_SIZE];
     int sockfd;
         
-    //istringstream(argv[2]) >> handshake_port;
+    istringstream(argv[2]) >> handshake_port;
 
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -51,23 +53,23 @@ int main(int, char *argv[]) {
     sendto(sockfd, handshake_message, sizeof(handshake_message), 0, (struct sockaddr *)&server, slen);
 
     // Create a "response "server"???"  (find a better name for this)
-    // memset((char *) &response_server, 0, sizeof(response_server));
-    // response_server.sin_family = AF_INET;
-    // response_server.sin_port = htons(handshake_port);
-    // response_server.sin_addr.s_addr = htonl(INADDR_ANY);
-    // bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
+    memset((char *) &response_server, 0, sizeof(response_server));
+    response_server.sin_family = AF_INET;
+    response_server.sin_port = htons(handshake_port);
+    response_server.sin_addr.s_addr = htonl(INADDR_ANY);
+    bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
 
     // // Prepare for response
-    // memset((char *) &buffer, 0, sizeof(buffer));
-    // socklen_t rslen = sizeof(response_server);
+    memset((char *) &buffer, 0, sizeof(buffer));
+    socklen_t rslen = sizeof(response_server);
 
-    // // DEBUG MESSAGE
-    // cout << "Waiting for payload on socket " << sockfd << endl;
+    // DEBUG MESSAGE
+    cout << "Waiting for payload on socket " << sockfd << endl;
 
-    // recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&response_server, &rslen);
+    recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&response_server, &rslen);
 
-    // // DEBUG MESSAGE
-    // cout << "Client Says: Transaction port: " << buffer << endl;
+    // DEBUG MESSAGE
+    cout << "Client Says: Transaction port: " << buffer << endl;
 
     close(sockfd);
     

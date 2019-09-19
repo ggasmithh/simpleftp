@@ -10,10 +10,12 @@
 //  6). https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception Argument handling
 //  7). https://stackoverflow.com/questions/5008804/generating-random-integer-from-a-range
 //  8). https://stackoverflow.com/questions/14753423/sprintf-convert-int-to-char
+//  9). https://stackoverflow.com/questions/10513196/c-convert-character-array-to-uppercase-no-mfc
+//  10). https://stackoverflow.com/questions/15388041/how-to-write-stdstring-to-file
 
+#include <unistd.h>
 #include <iostream>
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -23,6 +25,7 @@
 #include <stdexcept>
 #include <time.h>
 #include <stdio.h>
+#include <fstream>
 
 #define MAX_BUFFER_SIZE 8
 
@@ -31,7 +34,7 @@ using namespace std;
 
 int main(int, char* argv[]) {
     const char handshake_correct[MAX_BUFFER_SIZE] = "117";
-
+    const char transaction_end[MAX_BUFFER_SIZE] = "1234567";
     char *handshake_actual;
     int handshake_port;
     int transaction_port;
@@ -40,7 +43,9 @@ int main(int, char* argv[]) {
     struct sockaddr_in client;
     char buffer[MAX_BUFFER_SIZE];
     char payload[MAX_BUFFER_SIZE];
+    char small_payload[4];
     string complete_payload = "";
+    char *is_end;
  
     istringstream(argv[1]) >> handshake_port;
 
@@ -94,18 +99,35 @@ int main(int, char* argv[]) {
     server.sin_port = htons(transaction_port);
     server.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sockfd, (struct sockaddr *)&server, sizeof(server));
-    
-    for(int i = 0; i < 4; i++) {
+
+    while (1) {
         // Clear out our buffer
         memset((char *)&buffer, 0, sizeof(buffer));
         recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
-        complete_payload += buffer;
-    };
+        
+        if(strcmp(buffer, transaction_end) == 0) {
+            break;
+        } else {
+            complete_payload += buffer;
+
+            for (int i = 0; i < 4; i++) {
+                if (buffer[i] >= 'a' && buffer[i] <= 'z') {
+                    buffer[i] = buffer[i] - ' ';
+                } else {
+                    buffer[i] = buffer[i];
+                }
+            }
+
+            sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, clen);
+        }
+    } 
     
     close(sockfd);
 
-    cout << complete_payload << endl;
-
+    // Write file
+    ofstream output("dataReceived.txt");
+    output << complete_payload;
+    output.close();
 
     return 0;
 }

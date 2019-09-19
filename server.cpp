@@ -40,6 +40,7 @@ int main(int, char* argv[]) {
     struct sockaddr_in client;
     char buffer[MAX_BUFFER_SIZE];
     char payload[MAX_BUFFER_SIZE];
+    string complete_payload = "";
  
     istringstream(argv[1]) >> handshake_port;
 
@@ -66,19 +67,45 @@ int main(int, char* argv[]) {
         transaction_port = 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
         sprintf(payload, "%d", transaction_port);
 
-        // DEBUG MESSAGE
-        cout << "Server Says: Transaction port: " << transaction_port << endl;
+        cout << "Handshake detected. Selected random port " << transaction_port << endl;
+
         // Send the transaction port message back to the client
         socklen_t clen = sizeof(client);
 
-        // DEBUG MESSAGE
-        cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
+        //// DEBUG MESSAGE
+        //cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
         sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
     } else {
         throw runtime_error("Handshake failed.");
     }
 
+    // END STAGE 1 - HANDSHAKE
     close(sockfd);
+
+    //  
+    //  BEGIN STAGE 2 - TRANSACTION/TRANSMISSION
+    //
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+ 
+    // Set up the server object
+    memset((char *)&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(transaction_port);
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    bind(sockfd, (struct sockaddr *)&server, sizeof(server));
+    
+    for(int i = 0; i < 4; i++) {
+        // Clear out our buffer
+        memset((char *)&buffer, 0, sizeof(buffer));
+        recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
+        complete_payload += buffer;
+    };
+    
+    close(sockfd);
+
+    cout << complete_payload << endl;
+
 
     return 0;
 }

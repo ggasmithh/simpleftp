@@ -25,19 +25,16 @@ using namespace std;
 int main(int, char *argv[]) {
     char handshake_message[MAX_BUFFER_SIZE] = "117";
     const char *hostname = argv[1];
-
-    cout << handshake_message << endl;
-
     struct hostent *s;
     struct sockaddr_in server;
     struct sockaddr_in response_server;
     int handshake_port;
+    int transaction_port;
     char buffer[MAX_BUFFER_SIZE];
     char payload[MAX_BUFFER_SIZE];
     int sockfd;
         
     istringstream(argv[2]) >> handshake_port;
-
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -63,15 +60,37 @@ int main(int, char *argv[]) {
     memset((char *) &buffer, 0, sizeof(buffer));
     socklen_t rslen = sizeof(response_server);
 
-    // DEBUG MESSAGE
-    cout << "Waiting for payload on socket " << sockfd << endl;
+    //// DEBUG MESSAGE
+    //cout << "Waiting for payload on socket " << sockfd << endl;
 
     recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&response_server, &rslen);
 
-    // DEBUG MESSAGE
-    cout << "Client Says: Transaction port: " << buffer << endl;
+    istringstream(buffer) >> transaction_port;
 
+    //// DEBUG MESSAGE
+    //cout << "Client Says: Transaction port: " << buffer << endl;
+
+    // END STAGE 1 - HANDSHAKE
     close(sockfd);
+
+    //
+    //  BEGIN STAGE 2 - TRANSACTION/TRANSMISSION
+    //
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    // Get the server's details
+    memset((char *) &server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(transaction_port);
+    bcopy((char *)s->h_addr, (char *)&server.sin_addr.s_addr, s->h_length);
+    slen = sizeof(server);
+ 
+    for(int i = 0; i < 4; i++) {
+        sendto(sockfd, "test\n", sizeof("test\n"), 0, (struct sockaddr *)&server, slen);
+    };
     
+    close(sockfd);
+
     return 0;
 }

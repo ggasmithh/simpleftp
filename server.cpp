@@ -5,7 +5,7 @@
 //  1). https://www.youtube.com/watch?v=cNdlrbZSkyQ     "Creating a TCP Server in C++"
 //  2). http://beej.us/guide/bgnet/html/single/bgnet.html#simpleserver
 //  3). Lecture-3-F2019.pdf     Lecture 3 Slides
-//  4). Various manpages
+//  4). Various manpages, i.e. https://linux.die.net/man/3/listen
 //  5). https://www.cprogramming.com/tutorial/lesson14.html commandline argument parsing
 //  6). https://stackoverflow.com/questions/8480640/how-to-throw-a-c-exception Argument handling
 //  7). https://stackoverflow.com/questions/5008804/generating-random-integer-from-a-range
@@ -39,6 +39,7 @@ int main(int, char* argv[]) {
     int handshake_port;
     int transaction_port;
     int sockfd;
+    int acc_sockfd;
     struct sockaddr_in server;
     struct sockaddr_in client;
     char buffer[MAX_BUFFER_SIZE];
@@ -49,11 +50,8 @@ int main(int, char* argv[]) {
  
     istringstream(argv[1]) >> handshake_port;
 
-    // THIS IS UDP, CORRECT THIS LATER
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-
-    // Clear out our buffer
-    memset((char *)&buffer, 0, sizeof(buffer));
+    // TCP Socket
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     // Set up the server object
     memset((char *)&server, 0, sizeof(server));
@@ -63,8 +61,17 @@ int main(int, char* argv[]) {
     bind(sockfd, (struct sockaddr *)&server, sizeof(server));
 
     socklen_t clen = sizeof(client);
+
+    listen(sockfd, SOMAXCONN);
+
+    acc_sockfd = accept(sockfd, (sockaddr*)&client, &clen);
     
-    recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
+    close(sockfd);
+
+    // Clear out our buffer
+    memset((char *)&buffer, 0, sizeof(buffer));
+
+    recv(acc_sockfd, buffer, sizeof(buffer), 0);
 
     // buffer will be the handshake message from the client at this point
     if (strcmp(buffer, handshake_correct) == 0) {
@@ -74,18 +81,15 @@ int main(int, char* argv[]) {
 
         cout << "Handshake detected. Selected random port " << transaction_port << endl;
 
-        // Send the transaction port message back to the client
-        socklen_t clen = sizeof(client);
-
         //// DEBUG MESSAGE
         //cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
-        sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
+        send(acc_sockfd, payload, sizeof(payload), 0);
     } else {
         throw runtime_error("Handshake failed.");
     }
 
     // END STAGE 1 - HANDSHAKE
-    close(sockfd);
+    close(acc_sockfd);
 
     //  
     //  BEGIN STAGE 2 - TRANSACTION/TRANSMISSION

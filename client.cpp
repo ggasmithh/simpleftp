@@ -43,7 +43,8 @@ int main(int, char *argv[]) {
         
     istringstream(argv[2]) >> handshake_port;
 
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    // TCP Socket 
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     // Get the server's details
     s = gethostbyname(hostname);
@@ -52,25 +53,28 @@ int main(int, char *argv[]) {
     server.sin_port = htons(handshake_port);
     bcopy((char *)s->h_addr, (char *)&server.sin_addr.s_addr, s->h_length);
 
-    // Send the handshake message
+    // Connect to the server
     socklen_t slen = sizeof(server);
-    sendto(sockfd, handshake_message, sizeof(handshake_message), 0, (struct sockaddr *)&server, slen);
+    connect(sockfd, (struct sockaddr *)&server, slen);
+
+    // Send the handshake message
+    send(sockfd, handshake_message, sizeof(handshake_message), 0);
 
     // Create a "response "server"???"  (find a better name for this)
-    memset((char *) &response_server, 0, sizeof(response_server));
-    response_server.sin_family = AF_INET;
-    response_server.sin_port = htons(handshake_port);
-    response_server.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
+    //memset((char *) &response_server, 0, sizeof(response_server));
+    //response_server.sin_family = AF_INET;
+    //response_server.sin_port = htons(handshake_port);
+    //response_server.sin_addr.s_addr = htonl(INADDR_ANY);
+    //bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
 
     // // Prepare for response
     memset((char *) &buffer, 0, sizeof(buffer));
-    socklen_t rslen = sizeof(response_server);
+    //socklen_t rslen = sizeof(response_server);
 
     //// DEBUG MESSAGE
     //cout << "Waiting for payload on socket " << sockfd << endl;
 
-    recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&response_server, &rslen);
+    recv(sockfd, buffer, sizeof(buffer), 0);
 
     istringstream(buffer) >> transaction_port;
 
@@ -99,7 +103,7 @@ int main(int, char *argv[]) {
     response_server.sin_port = htons(transaction_port);
     response_server.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
-    rslen = sizeof(response_server);
+    socklen_t rslen = sizeof(response_server);
 
     ifstream text_file(argv[3]);
     if (text_file) {

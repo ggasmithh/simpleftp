@@ -26,6 +26,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <fstream>
+#include <cctype>
 
 #define MAX_BUFFER_SIZE 8
 
@@ -107,6 +108,7 @@ int main(int, char* argv[]) {
     while (1) {
         // Clear out our buffer
         memset((char *)&buffer, 0, sizeof(buffer));
+        memset((char *)&payload, 0, sizeof(payload));
         recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
         
         if(strcmp(buffer, transaction_end) == 0) {
@@ -115,14 +117,10 @@ int main(int, char* argv[]) {
             complete_payload += buffer;
 
             for (int i = 0; i < 4; i++) {
-                if (buffer[i] >= 'a' && buffer[i] <= 'z') {
-                    buffer[i] = buffer[i] - ' ';
-                } else {
-                    buffer[i] = buffer[i];
-                }
+                payload[i] = toupper(buffer[i]);
             }
 
-            sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, clen);
+            sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
         }
     } 
     
@@ -135,3 +133,4 @@ int main(int, char* argv[]) {
 
     return 0;
 }
+

@@ -39,7 +39,6 @@ int main(int, char *argv[]) {
     char payload[MAX_BUFFER_SIZE];
     char file_buffer[MAX_FILE_BUFFER_SIZE];
     int sockfd;
-    bool is_end = false;
         
     istringstream(argv[2]) >> handshake_port;
 
@@ -60,26 +59,12 @@ int main(int, char *argv[]) {
     // Send the handshake message
     send(sockfd, handshake_message, sizeof(handshake_message), 0);
 
-    // Create a "response "server"???"  (find a better name for this)
-    //memset((char *) &response_server, 0, sizeof(response_server));
-    //response_server.sin_family = AF_INET;
-    //response_server.sin_port = htons(handshake_port);
-    //response_server.sin_addr.s_addr = htonl(INADDR_ANY);
-    //bind(sockfd, (struct sockaddr *)&response_server, sizeof(response_server));
-
     // // Prepare for response
     memset((char *) &buffer, 0, sizeof(buffer));
-    //socklen_t rslen = sizeof(response_server);
-
-    //// DEBUG MESSAGE
-    //cout << "Waiting for payload on socket " << sockfd << endl;
 
     recv(sockfd, buffer, sizeof(buffer), 0);
 
     istringstream(buffer) >> transaction_port;
-
-    //// DEBUG MESSAGE
-    //cout << "Client Says: Transaction port: " << buffer << endl;
 
     // END STAGE 1 - HANDSHAKE
     close(sockfd);
@@ -111,12 +96,15 @@ int main(int, char *argv[]) {
             memset((char *) &small_buffer, 0, sizeof(small_buffer));
             sendto(sockfd, file_buffer, sizeof(file_buffer), 0, (struct sockaddr *)&server, slen);
             recvfrom(sockfd, small_buffer, sizeof(small_buffer), 0, (struct sockaddr *)&response_server, &rslen);
-            cout << small_buffer << endl;
+            //cout << small_buffer << endl;
+            printf(small_buffer);
+            printf("\n");
         }
     } else {
         throw runtime_error("Input file does not exist."); 
     }
     sendto(sockfd, transaction_end, sizeof(transaction_end), 0, (struct sockaddr *)&server, slen);
+
     close(sockfd);
 
     return 0;

@@ -47,7 +47,6 @@ int main(int, char* argv[]) {
     char payload[MAX_BUFFER_SIZE];
     char small_payload[4];
     string complete_payload = "";
-    char *is_end;
  
     istringstream(argv[1]) >> handshake_port;
 
@@ -60,30 +59,19 @@ int main(int, char* argv[]) {
     server.sin_port = htons(handshake_port);
     server.sin_addr.s_addr = htonl(INADDR_ANY);
     bind(sockfd, (struct sockaddr *)&server, sizeof(server));
-
-    socklen_t clen = sizeof(client);
-
     listen(sockfd, SOMAXCONN);
-
+    socklen_t clen = sizeof(client);
     acc_sockfd = accept(sockfd, (sockaddr*)&client, &clen);
-    
     close(sockfd);
 
-    // Clear out our buffer
     memset((char *)&buffer, 0, sizeof(buffer));
-
     recv(acc_sockfd, buffer, sizeof(buffer), 0);
 
-    // buffer will be the handshake message from the client at this point
     if (strcmp(buffer, handshake_correct) == 0) {
         srand(time(NULL));
         transaction_port = 1024 + (rand() % static_cast<int>(65535 - 1024 + 1));
         sprintf(payload, "%d", transaction_port);
-
         cout << "Handshake detected. Selected random port " << transaction_port << endl;
-
-        //// DEBUG MESSAGE
-        //cout << "Sending payload '" << payload << "' to this port: " << client.sin_port << " At this address: " << client.sin_addr.s_addr << " on socket " << socket << endl;
         send(acc_sockfd, payload, sizeof(payload), 0);
     } else {
         throw runtime_error("Handshake failed.");
@@ -98,7 +86,6 @@ int main(int, char* argv[]) {
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
  
-    // Set up the server object
     memset((char *)&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(transaction_port);
@@ -106,21 +93,18 @@ int main(int, char* argv[]) {
     bind(sockfd, (struct sockaddr *)&server, sizeof(server));
 
     while (1) {
-        // Clear out our buffer
         memset((char *)&buffer, 0, sizeof(buffer));
-        memset((char *)&payload, 0, sizeof(payload));
+        memset((char *)&small_payload, 0, sizeof(small_payload));
         recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&client, &clen);
         
         if(strcmp(buffer, transaction_end) == 0) {
             break;
         } else {
             complete_payload += buffer;
-
             for (int i = 0; i < 4; i++) {
-                payload[i] = toupper(buffer[i]);
+                small_payload[i] = toupper(buffer[i]);
             }
-
-            sendto(sockfd, payload, sizeof(payload), 0, (struct sockaddr *)&client, clen);
+            sendto(sockfd, small_payload, sizeof(small_payload), 0, (struct sockaddr *)&client, clen);
         }
     } 
     

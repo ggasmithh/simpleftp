@@ -127,7 +127,7 @@ int main(int, char* argv[]) {
     close(sockfd);
 
     // Write file
-    ofstream output("dataReceived.txt");
+    ofstream output("dataReceived.txt", ios_base::trunc);
     output << complete_payload;
     output.close();
 
